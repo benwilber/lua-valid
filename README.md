@@ -173,7 +173,7 @@ assert(is_valid)  -- true
 
 * `opts` (optional): Table of options.
     * `minlen`: The minimum allowable length of the string (inclusive).
-    * `maxlen`: The minimum allowable length of the string (inclusive).
+    * `maxlen`: The maximum allowable length of the string (inclusive).
     * `func`: A custom validation function to call after the string check.
 
 ### `valid.table`
