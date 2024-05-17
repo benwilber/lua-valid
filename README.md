@@ -288,7 +288,7 @@ assert(not is_valid)  -- false, too long
 * `opts` (optional): Table of options.
     * `minlen`: The minimum allowable length of the array, If `0` then sets `empty = true`.
     * `maxlen`: The maximum allowable length of the array.
-    * `empty`: Set to `true` to allow empty arrays.  If `true` thensets `minlen = 0`.
+    * `empty`: Set to `true` to allow empty arrays.  If `true` then sets `minlen = 0`.
     * `func`: A custom validation function to call after the array check.
 
 
