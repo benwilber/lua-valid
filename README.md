@@ -167,6 +167,9 @@ assert(not is_valid)  -- false, pattern does not match
 
 local is_valid = valid.string {minlen = 2, maxlen = 4, pattern = "a+"}("aaa")
 assert(is_valid)  -- true
+
+local is_valid = valid.string {minlen = 2, maxlen = 4, pattern = "a+"}({})
+assert(not is_valid)  -- false, not a string
 ```
 
 #### Parameters
