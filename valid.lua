@@ -7,14 +7,14 @@ end
 local function callfunc(func, val)
     local is_valid, val_or_err, badval_or_nil = func(val)
 
-    if not val_or_err then
+    if val_or_err == nil then
         if is_valid then
             val_or_err = val
             badval_or_nil = nil
         else
             val_or_err = "func"
 
-            if not badval_or_nil then
+            if badval_or_nil == nil then
                 badval_or_nil = val
             end
         end
@@ -139,7 +139,7 @@ local function vtable(opts)
         local is_valid
         local val_or_err
         local badval_or_nil
-        local sub_path
+        local path_or_nil
 
         for key, func_or_lit in pairs(tabledef) do
             if type(func_or_lit) ~= "function" then
@@ -148,10 +148,10 @@ local function vtable(opts)
 
             -- we already validated the required fields
             if val[key] ~= nil then
-                is_valid, val_or_err, badval_or_nil, sub_path = func_or_lit(val[key])
+                is_valid, val_or_err, badval_or_nil, path_or_nil = func_or_lit(val[key])
 
                 if not is_valid then
-                    return false, val_or_err, badval_or_nil, {key, sub_path}
+                    return false, val_or_err, badval_or_nil, {key, path_or_nil}
                 end
             end
         end
@@ -179,7 +179,7 @@ local function arrayof(deffunc, opts)
     local maxlen = opts.maxlen or math.huge
     local func = opts.func or defaultfunc
 
-    if opts.empty == true then
+    if opts.empty then
         empty = true
 
         -- minlen doesnt matter if empty = true
@@ -213,23 +213,23 @@ local function arrayof(deffunc, opts)
         local is_valid
         local val_or_err
         local badval_or_nil
-        local sub_path
+        local path_or_nil
 
         for i, v in ipairs(val) do
-            is_valid, val_or_err, badval_or_nil, sub_path = deffunc(v)
+            is_valid, val_or_err, badval_or_nil, path_or_nil = deffunc(v)
 
             if not is_valid then
-                return false, val_or_err, badval_or_nil, {i, sub_path}
+                return false, val_or_err, badval_or_nil, {i, path_or_nil}
             end
 
-            is_valid, val_or_err, badval_or_nil, sub_path = callfunc(func, v)
+            is_valid, val_or_err, badval_or_nil, path_or_nil = callfunc(func, v)
 
             if not is_valid then
-                return false, val_or_err, badval_or_nil, {i, sub_path}
+                return false, val_or_err, badval_or_nil, {i, path_or_nil}
             end
         end
 
-        return true, val, nil
+        return true, val
     end
 end
 _M.arrayof = arrayof
@@ -248,8 +248,8 @@ _M.map = map
 local function mapof(deffuncs, opts)
     opts = opts or {}
     local empty = false
-    local keydeffunc = deffuncs[1]
-    local valdeffunc = deffuncs[2]
+    local keydeffunc = deffuncs[1] or defaultfunc
+    local valdeffunc = deffuncs[2] or defaultfunc
     local keyfunc = defaultfunc
     local valfunc = defaultfunc
 
@@ -258,7 +258,7 @@ local function mapof(deffuncs, opts)
         valfunc = opts.func[2] or defaultfunc
     end
 
-    if opts.empty == true then
+    if opts.empty then
         empty = true
     end
 
@@ -267,6 +267,7 @@ local function mapof(deffuncs, opts)
             return false, "table", val
         end
 
+        -- checking for nil (not false)
         if next(val) == nil and not empty then
             return false, "empty", val
         end
@@ -274,31 +275,31 @@ local function mapof(deffuncs, opts)
         local is_valid
         local val_or_err
         local badval_or_nil
-        local sub_path
+        local path_or_nil
 
         for k, v in pairs(val) do
-            is_valid, val_or_err, badval_or_nil, sub_path = keydeffunc(k)
+            is_valid, val_or_err, badval_or_nil, path_or_nil = keydeffunc(k)
 
             if not is_valid then
-                return false, val_or_err, badval_or_nil, {k, sub_path}
+                return false, val_or_err, badval_or_nil, {k, path_or_nil}
             end
 
-            is_valid, val_or_err, badval_or_nil, sub_path = keyfunc(k)
+            is_valid, val_or_err, badval_or_nil, path_or_nil = keyfunc(k)
 
             if not is_valid then
-                return false, val_or_err, badval_or_nil, {k, sub_path}
+                return false, val_or_err, badval_or_nil, {k, path_or_nil}
             end
 
-            is_valid, val_or_err, badval_or_nil, sub_path = valdeffunc(v)
+            is_valid, val_or_err, badval_or_nil, path_or_nil = valdeffunc(v)
 
             if not is_valid then
-                return false, val_or_err, badval_or_nil, {k, v, sub_path}
+                return false, val_or_err, badval_or_nil, {k, v, path_or_nil}
             end
 
-            is_valid, val_or_err, badval_or_nil, sub_path = valfunc(v)
+            is_valid, val_or_err, badval_or_nil, path_or_nil = valfunc(v)
 
             if not is_valid then
-                return false, val_or_err, badval_or_nil, {k, v, sub_path}
+                return false, val_or_err, badval_or_nil, {k, v, path_or_nil}
             end
         end
 
