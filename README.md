@@ -310,6 +310,8 @@ A shorthand for [`valid.table`](#validtable) with `opts.map` set to `true`.
 
 ### `valid.mapof`
 
+Validates maps with specific type definitions for both keys and values.
+
 #### Usage
 
 ```lua
