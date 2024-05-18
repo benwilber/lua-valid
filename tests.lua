@@ -1,5 +1,29 @@
+require "busted"
 local valid = require "valid"
-local busted = require "busted"
+
+local ptable
+ptable = function(tbl, indent) -- luacheck: no unused
+    if type(tbl) ~= "table" then
+        return tostring(tbl)
+    end
+
+    indent = indent or 0
+    local s = string.rep(" ", indent) .. "{\n"
+
+    indent = indent + 2
+
+    for k, v in pairs(tbl) do
+        local fmt = string.rep(" ", indent) .. "[" .. tostring(k) .. "] = "
+
+        if type(v) == "table" then
+            s = s .. fmt .. ptable(v, indent)
+        else
+            s = s .. fmt .. tostring(v) .. ",\n"
+        end
+    end
+
+    return s .. string.rep(" ", indent - 2) .. "},\n"
+end
 
 describe("Validation Library Tests", function()
 
@@ -78,7 +102,7 @@ describe("Validation Library Tests", function()
                     friend_ids = {1, 2, 3}
                 },
                 badval_or_nil = nil,
-                key = nil
+                path_or_nil = nil
             }
         },
 
@@ -101,7 +125,7 @@ describe("Validation Library Tests", function()
                     country = "USA"
                 },
                 badval_or_nil = nil,
-                key = nil
+                path_or_nil = nil
             }
         },
 
@@ -124,7 +148,7 @@ describe("Validation Library Tests", function()
                     tags = {"sale", "new"}
                 },
                 badval_or_nil = nil,
-                key = nil
+                path_or_nil = nil
             }
         },
 
@@ -193,7 +217,7 @@ describe("Validation Library Tests", function()
                     }
                 },
                 badval_or_nil = nil,
-                key = nil
+                path_or_nil = nil
             }
         },
 
@@ -210,7 +234,7 @@ describe("Validation Library Tests", function()
                 is_valid = false,
                 val_or_err = "required",
                 badval_or_nil = "city",
-                key = {"city"}
+                path_or_nil = {"city"}
             }
         },
 
@@ -232,7 +256,7 @@ describe("Validation Library Tests", function()
                 is_valid = false,
                 val_or_err = "pattern",
                 badval_or_nil = "john.doeexample.com",
-                key = {"contact", {"email"}}
+                path_or_nil = {"contact", {"email"}}
             }
         },
 
@@ -254,7 +278,7 @@ describe("Validation Library Tests", function()
                 is_valid = false,
                 val_or_err = "pattern",
                 badval_or_nil = "123-4567890",
-                key = {"contact", {"phone"}}
+                path_or_nil = {"contact", {"phone"}}
             }
         },
 
@@ -272,7 +296,7 @@ describe("Validation Library Tests", function()
                 is_valid = false,
                 val_or_err = "min",
                 badval_or_nil = 0,
-                key = {"price"}
+                path_or_nil = {"price"}
             }
         },
 
@@ -313,14 +337,76 @@ describe("Validation Library Tests", function()
                 is_valid = false,
                 val_or_err = "min",
                 badval_or_nil = -5.00,
-                key = {"products", {2, {"price"}}}
+                path_or_nil = {"products", {2, {"price"}}}
+            }
+        },
+        {
+            description = "Deeply nested",
+            definition = valid.map {
+                table = {
+                    categories = valid.arrayof(
+                        valid.map {
+                            table = {
+                                widgets = valid.arrayof(
+                                    valid.map {
+                                        table = {
+                                            tags = valid.map {
+                                                table = {
+                                                    name = valid.string()
+                                                }
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    )
+                }
+            },
+            data = {
+                categories = {
+                    {
+                        widgets = {
+                            {
+                                tags = {
+                                    name = 12345
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            expected = {
+                is_valid = false,
+                val_or_err = "string",
+                badval_or_nil = 12345,
+                path_or_nil = {
+                    "categories",
+                    {
+                        1,
+                        {
+                            "widgets",
+                            {
+                                1,
+                                {
+                                    "tags",
+                                    {
+                                        "name"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 
     for _, test in ipairs(tests) do
         it(test.description, function()
-            local is_valid, val_or_err, badval_or_nil, key = test.definition(test.data)
+            local is_valid, val_or_err, badval_or_nil, path_or_nil = test.definition(test.data)
+
+            -- print(is_valid, val_or_err, ptable(badval_or_nil), ptable(path_or_nil))
 
             assert.is_equal(test.expected.is_valid, is_valid)
 
@@ -332,10 +418,10 @@ describe("Validation Library Tests", function()
 
             assert.is_equal(test.expected.badval_or_nil, badval_or_nil)
 
-            if type(key) == "table" then
-                assert.same(test.expected.key, key)
+            if type(path_or_nil) == "table" then
+                assert.same(test.expected.path_or_nil, path_or_nil)
             else
-                assert.is_equal(test.expected.key, key)
+                assert.is_equal(test.expected.path_or_nil, path_or_nil)
             end
         end)
     end

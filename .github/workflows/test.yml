@@ -1,4 +1,4 @@
-name: Run Tests
+name: Run lints and tests
 
 on: [push, pull_request]
 
@@ -22,7 +22,10 @@ jobs:
     - uses: leafo/gh-actions-luarocks@v4
 
     - name: Install dependencies
-      run: luarocks install busted
+      run: luarocks install luacheck busted
+
+    - name: Run lints
+      run: make lint
 
     - name: Run tests
       run: make test

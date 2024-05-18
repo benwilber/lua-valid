@@ -318,10 +318,10 @@ Validates maps with specific type definitions for both keys and values.
 local valid = require "valid"
 
 -- A map where keys are strings and values are numbers within the range 1 to 10
-local valid_string_number_map = valid.mapof({
+local valid_string_number_map = valid.mapof {
     valid.string(),
     valid.number {min = 1, max = 10}
-})
+}
 
 local map_data = {
     one = 1,
@@ -382,7 +382,7 @@ The library provides detailed error information when validation fails. When `is_
 
 * `err`: Describes the type of validation error that occurred.
 * `badval`: The value that caused the validation to fail.
-* `path`: The path to the invalid key or index within the data structure.
+* `path`: The path to the invalid key or index within the table structure.
 
 These additional values can be used to pinpoint exactly where and why the validation failed.
 
@@ -415,21 +415,21 @@ local person_data = {
     }
 }
 
-local is_valid, val_or_err, badval_or_nil, path = valid_person(person_data)
+local is_valid, val_or_err, badval_or_nil, path_or_nil = valid_person(person_data)
 
 print("is_valid:", is_valid) -- false
 print("val_or_err:", val_or_err) -- "pattern"
 print("badval_or_nil:", badval_or_nil) -- invalid-email.com
 
--- path is a table like {"contact", {"email"}}
-print("path:", path[1], path[2][1]) -- "contact" "email"
+-- path_or_nil is a table like {"contact", {"email"}}
+print("path_or_nil:", path_or_nil[1], path_or_nil[2][1]) -- "contact" "email"
 ```
 
 ```
 is_valid:      false
 val_or_err:    pattern
 badval_or_nil: invalid-email.com
-path:          contact email
+path_or_nil:   contact email
 ```
 
 ## Contributing
