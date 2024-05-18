@@ -1,6 +1,6 @@
 # Lua Validation Library
 
-A flexible validation library for Lua to validate various values and table structures.
+A library for Lua to validate various values and table structures.
 
 ## Table of Contents
 
