@@ -177,6 +177,7 @@ assert(not is_valid)  -- false, not a string
 * `opts` (optional): Table of options.
     * `minlen`: The minimum allowable length of the string (inclusive).
     * `maxlen`: The maximum allowable length of the string (inclusive).
+    * `pattern`: A [Lua pattern](https://www.lua.org/pil/20.2.html)
     * `func`: A custom validation function to call after the string check.
 
 ### `valid.table`
