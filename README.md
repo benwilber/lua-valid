@@ -19,7 +19,6 @@ A library for Lua to validate various values and table structures.
   - [`valid.map`](#validmap)
   - [`valid.mapof`](#validmapof)
 - [Error Handling and Invalid Propagation](#error-handling-and-invalid-propagation)
-- [Running Tests](#running-tests)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -435,6 +434,46 @@ path_or_nil:   contact email
 ## Contributing
 
 Contributions are welcome! If you have any ideas, suggestions, or bug reports, please open an issue on this GitHub repository. If you would like to contribute code, please fork the repository and submit a pull request. Make sure to follow the existing code style and include tests for any new features or bug fixes.
+
+### Code Checks and Lints
+
+This library uses [luacheck](https://github.com/mpeterv/luacheck) for code checks and lints.  It can be installed from [LuaRocks](https://luarocks.org/) with:
+
+```sh
+$ luarocks install luacheck
+```
+
+#### Running Code Checks and Lints
+
+```sh
+$ make lint
+luacheck valid.lua
+Checking valid.lua                                OK
+
+Total: 0 warnings / 0 errors in 1 file
+
+luacheck --std=min+busted tests.lua
+Checking tests.lua                                OK
+
+Total: 0 warnings / 0 errors in 1 file
+```
+
+### Tests
+
+This library uses [busted](https://github.com/lunarmodules/busted) for tests.  It can be installed from [LuaRocks](https://luarocks.org/) with:
+
+```sh
+$ luarocks install busted
+```
+
+#### Running Tests
+
+```sh
+$ make test
+busted tests.lua
+++++++++++
+10 successes / 0 failures / 0 errors / 0 pending : 0.001586 seconds
+```
 
 ## License
 
