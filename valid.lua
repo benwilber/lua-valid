@@ -129,12 +129,15 @@ local function vtable(opts)
             return false, "empty", val
         end
 
-        -- required fields
-        for _, key in ipairs(required) do
+        if required ~= "all" then
 
-            -- checking for nil (not false)
-            if val[key] == nil then
-                return false, "required", key, {key}
+            -- specific required fields
+            for _, key in ipairs(required) do
+
+                -- checking for nil (not false)
+                if val[key] == nil then
+                    return false, "required", key, {key}
+                end
             end
         end
 
@@ -142,16 +145,24 @@ local function vtable(opts)
         local val_or_err
         local badval_or_nil
         local path_or_nil
+        local v
 
         for key_or_idx, func_or_lit in pairs(tabledef) do
             if type(func_or_lit) ~= "function" then
                 func_or_lit = literal(func_or_lit)
             end
 
+            v = val[key_or_idx]
+
+            if v == nil and required == "all" then
+                -- every field is required
+                return false, "required", key_or_idx, {key_or_idx}
+            end
+
             -- we already validated the required fields
             -- checking for nil (not false)
-            if val[key_or_idx] ~= nil then
-                is_valid, val_or_err, badval_or_nil, path_or_nil = func_or_lit(val[key_or_idx])
+            if v ~= nil then
+                is_valid, val_or_err, badval_or_nil, path_or_nil = func_or_lit(v)
 
                 if not is_valid then
                     return false, val_or_err, badval_or_nil, {key_or_idx, path_or_nil}
