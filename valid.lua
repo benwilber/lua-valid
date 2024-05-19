@@ -25,10 +25,17 @@ end
 
 local function literal(lit, opts)
     opts = opts or {}
+    local icase = opts.icase or false
     local func = opts.func or defaultfunc
 
     return function(val)
-        if val ~= lit then
+        if icase and type(lit) == "string" and type(val) == "string" then
+
+            if val:lower() ~= lit:lower() then
+                return false, "literal", val
+            end
+
+        elseif val ~= lit then
             return false, "literal", val
         end
 
