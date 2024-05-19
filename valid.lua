@@ -178,6 +178,7 @@ _M.array = array
 local function arrayof(deffunc, opts)
     opts = opts or {}
     local empty = false
+    local unique = false
     local minlen = opts.minlen or 0
     local maxlen = opts.maxlen or math.huge
     local func = opts.func or defaultfunc
@@ -192,6 +193,10 @@ local function arrayof(deffunc, opts)
     if minlen == 0 and not empty then
         -- empty doesnt matter if minlen = 0
         empty = true
+    end
+
+    if opts.unique then
+        unique = true
     end
 
     return function(val)
@@ -217,6 +222,8 @@ local function arrayof(deffunc, opts)
         local val_or_err
         local badval_or_nil
         local path_or_nil
+        local set = {}
+        local prev_i
 
         for i, v in ipairs(val) do
             is_valid, val_or_err, badval_or_nil, path_or_nil = deffunc(v)
@@ -229,6 +236,16 @@ local function arrayof(deffunc, opts)
 
             if not is_valid then
                 return false, val_or_err, badval_or_nil, {i, path_or_nil}
+            end
+
+            if unique then
+                prev_i = set[v]
+
+                if prev_i ~= nil then
+                    return false, "unique", v, {prev_i, i}
+                else
+                    set[v] = i
+                end
             end
         end
 
