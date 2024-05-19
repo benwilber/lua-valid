@@ -55,7 +55,7 @@ describe("Validation Library Tests", function()
     }
 
     local valid_product = valid.map {
-        required = {"id", "name", "price"},
+        required = "all", --{"id", "name", "price"},
         table = {
             id = valid.string {pattern = "%w+"},
             name = valid.string {minlen = 3, maxlen = 100},
