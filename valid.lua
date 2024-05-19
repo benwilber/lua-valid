@@ -1,7 +1,7 @@
 local _M = {}
 
 local function defaultfunc(val)
-    return true, val, nil
+    return true, val
 end
 
 local function callfunc(func, val)
@@ -103,15 +103,15 @@ local function vtable(opts)
     local func = opts.func or defaultfunc
     local tabledef = opts.table
 
-    if opts.array == true then
+    if opts.array then
         array = true
     end
 
-    if opts.map == true then
+    if opts.map then
         map = true
     end
 
-    if opts.empty == true then
+    if opts.empty then
         empty = true
     end
 
@@ -131,6 +131,8 @@ local function vtable(opts)
 
         -- required fields
         for _, key in ipairs(required) do
+
+            -- checking for nil (not false)
             if val[key] == nil then
                 return false, "required", key, {key}
             end
@@ -141,17 +143,18 @@ local function vtable(opts)
         local badval_or_nil
         local path_or_nil
 
-        for key, func_or_lit in pairs(tabledef) do
+        for key_or_idx, func_or_lit in pairs(tabledef) do
             if type(func_or_lit) ~= "function" then
                 func_or_lit = literal(func_or_lit)
             end
 
             -- we already validated the required fields
-            if val[key] ~= nil then
-                is_valid, val_or_err, badval_or_nil, path_or_nil = func_or_lit(val[key])
+            -- checking for nil (not false)
+            if val[key_or_idx] ~= nil then
+                is_valid, val_or_err, badval_or_nil, path_or_nil = func_or_lit(val[key_or_idx])
 
                 if not is_valid then
-                    return false, val_or_err, badval_or_nil, {key, path_or_nil}
+                    return false, val_or_err, badval_or_nil, {key_or_idx, path_or_nil}
                 end
             end
         end
