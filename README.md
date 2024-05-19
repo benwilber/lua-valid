@@ -18,6 +18,7 @@ A library for Lua to validate various values and table structures.
   - [`valid.arrayof`](#validarrayof)
   - [`valid.map`](#validmap)
   - [`valid.mapof`](#validmapof)
+  - [`valid.func`](#validfunc)
 - [Error Handling and Invalid Propagation](#error-handling-and-invalid-propagation)
 - [Contributing](#contributing)
 - [License](#license)
@@ -383,6 +384,28 @@ assert(not is_valid)  -- false, "name" is required for "bob"
 * `opts` (optional): Table of options.
     * `empty`:  Set to `true` to allow empty maps.
     * `func`: A table containing two custom validation functions, one for the keys and one for the values.
+
+### `valid.func`
+
+Validates that a value is a function.
+
+#### Usage
+
+```lua
+local valid = require "valid"
+
+local valid_function = valid.func()
+
+local is_valid = valid_function(function() end)
+assert(is_valid) -- true
+
+local is_valid = valid_function("123")
+assert(not is_valid) -- false, not a function
+```
+
+#### Parameters
+
+*(none)*
 
 ## Error Handling and Invalid Propagation
 

@@ -339,4 +339,15 @@ local function mapof(deffuncs, opts)
 end
 _M.mapof = mapof
 
+local function func()
+    return function(val)
+        if type(val) ~= "function" then
+            return false, "func", val
+        end
+
+        return true, val
+    end
+end
+_M.func = func
+
 return _M
