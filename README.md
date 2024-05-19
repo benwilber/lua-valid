@@ -115,6 +115,14 @@ assert(not is_valid)  -- false
 
 local is_valid = valid.literal("abc", {icase = true})("ABC")
 assert(is_valid)  -- true
+
+local price_table = {price = 1.00}
+
+local is_valid = valid.literal(price_table)({price = 1.00})
+assert(not is_valid) -- false, not the same table
+
+local is_valid = valid.literal(price_table)(price_table)
+assert(is_valid) -- true
 ```
 
 #### Parameters
