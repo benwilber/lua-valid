@@ -234,7 +234,7 @@ assert(not is_valid)  -- false, multiple validation errors
     * `array`: Set to `true` if the table should be validated as an array.
     * `map`: Set to `true` if the table should be validated as a map.
     * `empty`: Set to `true` to allow empty tables.
-    * `required`: An optional list of required keys for maps.
+    * `required`: An optional list of required keys for maps.  The special string `"all"` can be given to indicate that all keys are required without explicitly providing each of them.
     * `func`: A custom validation function to call after the table check.
     * `table`: A nested table definition for validating nested tables.
 
