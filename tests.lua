@@ -74,7 +74,35 @@ describe("Validation Library Tests", function()
         }
     }
 
+    local simple_function = function() end
+
     local tests = {
+        -- Valid simple function
+        {
+            description = "Valid simple function",
+            definition = valid.func(),
+            data = simple_function,
+            expected = {
+                is_valid = true,
+                val_or_err = simple_function,
+                badval_or_nil = nil,
+                path_or_nil = nil
+            }
+        },
+
+        -- Invalid function
+        {
+            description = "Invalid function",
+            definition = valid.func(),
+            data = "123",
+            expected = {
+                is_valid = false,
+                val_or_err = "func",
+                badval_or_nil = "123",
+                path_or_nil = nil
+            }
+        },
+
         -- Valid contact data
         {
             description = "Valid contact data",
