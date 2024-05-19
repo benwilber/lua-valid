@@ -31,7 +31,7 @@ A library for Lua to validate various values and table structures.
 
 ## Installation
 
-Copy the `valid.lua` file to a directory in your `LUA_PATH`.
+Copy the [`valid.lua`](valid.lua) file to a directory in your `LUA_PATH`.
 
 ## Basic Usage
 
