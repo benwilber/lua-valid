@@ -60,7 +60,7 @@ describe("Validation Library Tests", function()
             id = valid.string {pattern = "%w+"},
             name = valid.string {minlen = 3, maxlen = 100},
             price = valid.number {min = 0.01},
-            tags = valid.arrayof(valid.string {minlen = 1}, {empty = true})
+            tags = valid.arrayof(valid.string {minlen = 1}, {empty = true, unique = true})
         }
     }
 
@@ -149,6 +149,24 @@ describe("Validation Library Tests", function()
                 },
                 badval_or_nil = nil,
                 path_or_nil = nil
+            }
+        },
+
+        -- Invalid product data (unique tags)
+        {
+            description = "Invalid product data (unique tags)",
+            definition = valid_product,
+            data = {
+                id = "p001",
+                name = "Widget",
+                price = 19.99,
+                tags = {"sale", "new", "new"}
+            },
+            expected = {
+                is_valid = false,
+                val_or_err = "unique",
+                badval_or_nil = "new",
+                path_or_nil = {"tags", {2, 3}}
             }
         },
 
