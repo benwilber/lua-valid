@@ -5,7 +5,7 @@ local function defaultfunc(val)
 end
 
 local function callfunc(func, val)
-    local is_valid, val_or_err, badval_or_nil = func(val)
+    local is_valid, val_or_err, badval_or_nil, path_or_nil = func(val)
 
     if val_or_err == nil then
         if is_valid then
@@ -20,7 +20,7 @@ local function callfunc(func, val)
         end
     end
 
-    return is_valid, val_or_err, badval_or_nil
+    return is_valid, val_or_err, badval_or_nil, path_or_nil
 end
 
 local function literal(lit, opts)
