@@ -283,6 +283,14 @@ local invalid_strings_data = {"hi", "hello", "thisiswaytoolong"}
 
 local is_valid = valid_strings(invalid_strings_data)
 assert(not is_valid)  -- false, too long
+
+local unique_strings = valid.arrayof(valid.string(), {unique = true})
+
+local is_valid = unique_strings({"a", "b", "c"})
+assert(is_valid) -- true
+
+local is_valid = unique_strings({"a", "b", "c", "c"})
+assert(not is_valid) -- false, values are not unique
 ```
 
 #### Parameters
@@ -292,6 +300,7 @@ assert(not is_valid)  -- false, too long
     * `minlen`: The minimum allowable length of the array, If `0` then sets `empty = true`.
     * `maxlen`: The maximum allowable length of the array.
     * `empty`: Set to `true` to allow empty arrays.  If `true` then sets `minlen = 0`.
+    * `unique`: Set to `true` to require that all values are unique. This is determined by adding each value of the array as a key in a table. If a conflict (duplicate key) is found during this process, the validation fails. This relies on the unique identity of each value, which is based on the value's equality and type.  Note that two tables are always considered distinct regardless of structure unless they are referencing *the same* table.
     * `func`: A custom validation function to call after the array check.
 
 
