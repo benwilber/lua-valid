@@ -100,7 +100,7 @@ Validates that a value matches a specific literal.
 
 The comparison is performed using the equality operator (`==`), which means that both the value and the type must match exactly.
 
-Note: that two tables will not compare equal unless they are both references to *the same* table.
+Note: Two tables will not compare equal unless they are both references to *the same* table.
 
 #### Usage
 
