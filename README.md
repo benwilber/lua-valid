@@ -18,6 +18,8 @@ A library for Lua to validate various values and table structures.
   - [`valid.arrayof`](#validarrayof)
   - [`valid.map`](#validmap)
   - [`valid.mapof`](#validmapof)
+  - [`valid.anyof`](#validanyof)
+  - [`valid.allof`](#validallof)
   - [`valid.func`](#validfunc)
 - [Error Handling and Invalid Propagation](#error-handling-and-invalid-propagation)
 - [Contributing](#contributing)
@@ -384,6 +386,55 @@ assert(not is_valid)  -- false, "name" is required for "bob"
 * `opts` (optional): Table of options.
     * `empty`:  Set to `true` to allow empty maps.
     * `func`: A table containing two custom validation functions, one for the keys and one for the values.
+
+
+### `valid.anyof`
+
+Validates that a value satisfies at least one of the given validation functions.
+
+#### Usage
+
+```lua
+local valid = require "valid"
+
+local valid_string_or_number = valid.anyof {valid.string(), valid.number()}
+
+local is_valid = valid_string_or_number "123"
+assert(is_valid) -- true
+
+local is_valid = valid_string_or_number {name = "joe"}
+assert(not is_valid) -- false, not a string or number
+```
+
+#### Parameters
+
+* `deffuncs` (required): An array table of one or more validation functions.
+
+
+### `valid.allof`
+
+Validates that a value satisfies all of the given validation functions.
+
+#### Usage
+
+```lua
+local valid = require "valid"
+
+local valid_word_and_number = valid.allof {
+    valid.string {pattern = "%w"},
+    valid.string {pattern = "^%d+$"}
+}
+
+local is_valid = valid_word_and_number("123")
+assert(is_valid) -- true
+
+local is_valid = valid_word_and_number {name = "joe"}
+assert(not is_valid) -- false, not a string or number
+```
+
+#### Parameters
+
+* `deffuncs` (required): An array table of one or more validation functions.
 
 ### `valid.func`
 

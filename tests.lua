@@ -77,6 +77,59 @@ describe("Validation Library Tests", function()
     local simple_function = function() end
 
     local tests = {
+        {
+            description = "Valid string or number",
+            definition = valid.anyof {valid.string(), valid.number()},
+            data = "this is a string",
+            expected = {
+                is_valid = true,
+                val_or_err = "this is a string",
+                badval_or_nil = nil,
+                path_or_nil = nil
+            }
+        },
+
+        {
+            description = "Invalid string or number",
+            definition = valid.anyof {valid.string(), valid.number()},
+            data = false,
+            expected = {
+                is_valid = false,
+                val_or_err = "any",
+                badval_or_nil = false,
+                path_or_nil = {
+                    {"string", false},
+                    {"number", false}
+                }
+            }
+        },
+
+        {
+            description = "Valid word and number patterns",
+            definition = valid.allof {valid.string {pattern = "%w"}, valid.string {pattern = "%d"}},
+            data = "123435",
+            expected = {
+                is_valid = true,
+                val_or_err = "123435",
+                badval_or_nil = nil,
+                path_or_nil = nil
+            }
+        },
+
+        {
+            description = "Invalid word and number patterns",
+            definition = valid.allof {valid.string {pattern = "%w"}, valid.string {pattern = "^%d$"}},
+            data = "123435 not a number",
+            expected = {
+                is_valid = false,
+                val_or_err = "all",
+                badval_or_nil = "123435 not a number",
+                path_or_nil = {
+                    {"pattern", "123435 not a number"}
+                }
+            }
+        },
+
         -- Valid simple function
         {
             description = "Valid simple function",

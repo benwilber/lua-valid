@@ -350,4 +350,52 @@ local function func()
 end
 _M.func = func
 
+local function anyof(deffuncs)
+    return function(val)
+        local is_valid
+        local val_or_err
+        local badval_or_nil
+        local path_or_nil
+        local errtabs = {}
+
+        for _, deffunc in ipairs(deffuncs) do
+            is_valid, val_or_err, badval_or_nil, path_or_nil = deffunc(val)
+
+            if is_valid then
+                return true, val
+            else
+                errtabs[#errtabs + 1] = {val_or_err, badval_or_nil, path_or_nil}
+            end
+        end
+
+        return false, "any", val, errtabs
+    end
+end
+_M.anyof = anyof
+
+local function allof(deffuncs)
+    return function(val)
+        local is_valid
+        local val_or_err
+        local badval_or_nil
+        local path_or_nil
+        local errtabs = {}
+
+        for _, deffunc in ipairs(deffuncs) do
+            is_valid, val_or_err, badval_or_nil, path_or_nil = deffunc(val)
+
+            if not is_valid then
+                errtabs[#errtabs + 1] = {val_or_err, badval_or_nil, path_or_nil}
+            end
+        end
+
+        if #errtabs == 0 then
+            return true, val
+        else
+            return false, "all", val, errtabs
+        end
+    end
+end
+_M.allof = allof
+
 return _M
