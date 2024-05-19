@@ -287,10 +287,10 @@ assert(not is_valid)  -- false, too long
 
 local unique_strings = valid.arrayof(valid.string(), {unique = true})
 
-local is_valid = unique_strings({"a", "b", "c"})
+local is_valid = unique_strings {"a", "b", "c"}
 assert(is_valid) -- true
 
-local is_valid = unique_strings({"a", "b", "c", "c"})
+local is_valid = unique_strings {"a", "b", "c", "c"}
 assert(not is_valid) -- false, values are not unique
 ```
 
@@ -359,7 +359,7 @@ local valid_person = valid.map {
     }
 }
 
-local valid_people_map = valid.mapof({valid.string, valid_person})
+local valid_people_map = valid.mapof {valid.string, valid_person}
 
 local people_data = {
     alice = {name = "Alice", age = 30},
