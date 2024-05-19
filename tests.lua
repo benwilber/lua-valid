@@ -78,6 +78,18 @@ describe("Validation Library Tests", function()
 
     local tests = {
         {
+            description = "Case-insensitive literal",
+            definition = valid.literal("ALL CAPS", {icase = true}),
+            data = "all caps",
+            expected = {
+                is_valid = true,
+                val_or_err = "all caps",
+                badval_or_nil = nil,
+                path_or_nil = nil
+            }
+        },
+
+        {
             description = "Valid string or number",
             definition = valid.anyof {valid.string(), valid.number()},
             data = "this is a string",

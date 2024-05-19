@@ -98,6 +98,8 @@ assert(is_valid)  -- true
 
 Validates that a value matches a specific literal.
 
+The comparison is performed using the equality operator (`==`), which means that both the value and the type must match exactly.  Note that two tables will not compare equal unless they are both references to *the same* table.
+
 #### Usage
 
 ```lua
@@ -108,7 +110,17 @@ assert(is_valid)  -- true
 
 local is_valid = valid.literal("abc")("123")
 assert(not is_valid)  -- false
+
+local is_valid = valid.literal("abc", {icase = true})("ABC")
+assert(is_valid)  -- true
 ```
+
+#### Parameters
+
+* `opts` (optional): Table of options.
+    * `icase`: Set to `true` to allow case-insensitive validation of a string literal.
+    * `func`: A custom validation function to call after the literal check.
+
 
 ### `valid.number`
 
