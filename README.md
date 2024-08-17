@@ -5,6 +5,7 @@ A library for Lua to validate various values and table structures.
 ## Table of Contents
 
 - [Features](#features)
+- [Supported Lua Versions](#supported-lua-versions)
 - [Installation](#installation)
 - [Basic Usage](#basic-usage)
   - [Validating Simple Data Types](#validating-simple-data-types)
@@ -31,6 +32,15 @@ A library for Lua to validate various values and table structures.
 - Customizable validation functions.
 - Detailed error reporting with paths to invalid keys or indices.
 - Nested validations for complex table structures.
+
+## Supported Lua Versions
+
+`valid.lua` is tested with:
+
+- Lua 5.1 (including LuaJIT)
+- Lua 5.2
+- Lua 5.3
+- Lua 5.4
 
 ## Installation
 
