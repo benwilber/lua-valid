@@ -144,7 +144,7 @@ _M.string = _string
 
 -- Validates that a value is a table, with optional constraints for arrays and maps.
 -- (Don't shadow Lua's "table")
-local function _table(opts)
+local function table_(opts)
     opts = opts or {}
     local array = false
     local map = false
@@ -199,6 +199,8 @@ local function _table(opts)
         local val_or_err
         local badval_or_nil
         local path_or_nil
+
+        -- the value at key (or index) in the table.
         local v
 
         for key_or_idx, func_or_lit in pairs(tabledef) do
@@ -230,11 +232,11 @@ local function _table(opts)
         return callfunc(func, val)
     end
 end
-_M.table = _table
+_M.table = table_
 
 -- A shorthand for valid.table with opts.array set to true.
 local function array(opts)
-    return _table {
+    return table_ {
         array = true,
         empty = opts.empty,
         required = opts.required,
@@ -335,7 +337,7 @@ _M.arrayof = arrayof
 
 -- A shorthand for valid.table with opts.map set to true.
 local function map(opts)
-    return _table {
+    return table_ {
         map = true,
         empty = opts.empty,
         required = opts.required,
@@ -431,7 +433,7 @@ end
 _M.func = func
 
 -- Validates that a value satisfies at least one of the given validation functions.
-local function anyof(deffuncs)
+local function anyof(funcs_or_lits)
     return function(val)
         local is_valid
         local val_or_err
@@ -439,8 +441,12 @@ local function anyof(deffuncs)
         local path_or_nil
         local errtabs = {}
 
-        for _, deffunc in ipairs(deffuncs) do
-            is_valid, val_or_err, badval_or_nil, path_or_nil = deffunc(val)
+        for _, func_or_lit in ipairs(funcs_or_lits) do
+            if type(func_or_lit) ~= "function" then
+                func_or_lit = literal(func_or_lit)
+            end
+
+            is_valid, val_or_err, badval_or_nil, path_or_nil = func_or_lit(val)
 
             if is_valid then
                 -- is_valid, val_or_err, badval_or_nil, path_or_nil
@@ -457,7 +463,7 @@ end
 _M.anyof = anyof
 
 -- Validates that a value satisfies all of the given validation functions.
-local function allof(deffuncs)
+local function allof(funcs_or_lits)
     return function(val)
         local is_valid
         local val_or_err
@@ -465,8 +471,12 @@ local function allof(deffuncs)
         local path_or_nil
         local errtabs = {}
 
-        for _, deffunc in ipairs(deffuncs) do
-            is_valid, val_or_err, badval_or_nil, path_or_nil = deffunc(val)
+        for _, func_or_lit in ipairs(funcs_or_lits) do
+            if type(func_or_lit) ~= "function" then
+                func_or_lit = literal(func_or_lit)
+            end
+
+            is_valid, val_or_err, badval_or_nil, path_or_nil = func_or_lit(val)
 
             if not is_valid then
                 errtabs[#errtabs + 1] = {val_or_err, badval_or_nil, path_or_nil}
@@ -483,5 +493,11 @@ local function allof(deffuncs)
     end
 end
 _M.allof = allof
+
+-- Validates that a value is a literal boolean either true or false.
+local function boolean()
+    return anyof {true, false}
+end
+_M.boolean = boolean
 
 return _M

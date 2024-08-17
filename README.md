@@ -12,6 +12,7 @@ A library for Lua to validate various values and table structures.
   - [Validating Complex Data Types](#validating-complex-data-types)
 - [Validation Definition Functions](#validation-definition-functions)
   - [`valid.literal`](#validliteral)
+  - [`valid.boolean`](#validboolean)
   - [`valid.number`](#validnumber)
   - [`valid.string`](#validstring)
   - [`valid.table`](#validtable)
@@ -140,6 +141,29 @@ assert(is_valid) -- true
 * `opts` (optional): Table of options.
     * `icase`: Set to `true` to allow case-insensitive validation of a string literal.
     * `func`: A custom validation function to call after the literal check.
+
+
+### `valid.boolean`
+
+Validates that a value is a literal boolean either `true` or `false`.
+
+This is a shorthand for `valid.anyof {true, false}`.
+
+#### Usage
+
+```lua
+local valid = require "valid"
+
+local is_valid = valid.boolean()(true)
+assert(is_valid)  -- true
+
+local is_valid = valid.boolean()("false")
+assert(not is_valid)  -- false, not the literal boolean false
+```
+
+#### Parameters
+
+*(none)*
 
 
 ### `valid.number`
