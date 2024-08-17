@@ -1,12 +1,42 @@
+--[[
+  Copyright (c) 2024, Ben Wilber
+  https://github.com/benwilber/lua-valid
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+]]
 local _M = {}
 
+-- Local reference optimizations for non-JIT'd Lua versions.
+local type = type
+local pairs = pairs
+local ipairs = ipairs
+local string_match = string.match
+local string_lower = string.lower
+local math_huge = math.huge
+
+-- The default validation function that's called
+-- when no custom function is provided.
 local function defaultfunc(val)
-    return true, val
+    -- is_valid, val_or_err, badval_or_nil, path_or_nil
+    return true, val, nil, nil
 end
 
+-- Helper that calls a custom validation function and
+-- and ensures that meaningful values are returned.
 local function callfunc(func, val)
-    local is_valid, val_or_err, badval_or_nil = func(val)
+    local is_valid, val_or_err, badval_or_nil, path_or_nil = func(val)
 
+    -- checking for nil (not false)
     if val_or_err == nil then
         if is_valid then
             val_or_err = val
@@ -20,9 +50,10 @@ local function callfunc(func, val)
         end
     end
 
-    return is_valid, val_or_err, badval_or_nil
+    return is_valid, val_or_err, badval_or_nil, path_or_nil
 end
 
+-- Validates that a value string_matches a specific literal.
 local function literal(lit, opts)
     opts = opts or {}
     local icase = opts.icase or false
@@ -31,12 +62,14 @@ local function literal(lit, opts)
     return function(val)
         if icase and type(lit) == "string" and type(val) == "string" then
 
-            if val:lower() ~= lit:lower() then
-                return false, "literal", val
+            if string_lower(val) ~= string_lower(lit) then
+                -- is_valid, val_or_err, badval_or_nil, path_or_nil
+                return false, "literal", val, nil
             end
 
         elseif val ~= lit then
-            return false, "literal", val
+            -- is_valid, val_or_err, badval_or_nil, path_or_nil
+            return false, "literal", val, nil
         end
 
         return callfunc(func, val)
@@ -44,23 +77,27 @@ local function literal(lit, opts)
 end
 _M.literal = literal
 
+-- Validates that a value is a number within an optional range.
 local function number(opts)
     opts = opts or {}
-    local min = opts.min or -math.huge
-    local max = opts.max or math.huge
+    local min = opts.min or -math_huge
+    local max = opts.max or math_huge
     local func = opts.func or defaultfunc
 
     return function(val)
         if type(val) ~= "number" then
-            return false, "number", val
+            -- is_valid, val_or_err, badval_or_nil, path_or_nil
+            return false, "number", val, nil
         end
 
         if val < min then
-            return false, "min", val
+            -- is_valid, val_or_err, badval_or_nil, path_or_nil
+            return false, "min", val, nil
         end
 
         if val > max then
-            return false, "max", val
+            -- is_valid, val_or_err, badval_or_nil, path_or_nil
+            return false, "max", val, nil
         end
 
         return callfunc(func, val)
@@ -68,40 +105,46 @@ local function number(opts)
 end
 _M.number = number
 
--- don't shadow lua's string
-local function vstring(opts)
+-- Validates that a value is a string with optional length and pattern constraints.
+-- (Don't shadow Lua's "string")
+local function _string(opts)
     opts = opts or {}
     local minlen = opts.minlen or 0
-    local maxlen = opts.maxlen or math.huge
+    local maxlen = opts.maxlen or math_huge
     local pattern = opts.pattern
     local func = opts.func or defaultfunc
 
     return function(val)
         if type(val) ~= "string" then
-            return false, "string", val
+            -- is_valid, val_or_err, badval_or_nil, path_or_nil
+            return false, "string", val, nil
         end
 
         local len = #val
 
         if len < minlen then
-            return false, "minlen", val
+            -- is_valid, val_or_err, badval_or_nil, path_or_nil
+            return false, "minlen", val, nil
         end
 
         if len > maxlen then
-            return false, "maxlen", val
+            -- is_valid, val_or_err, badval_or_nil, path_or_nil
+            return false, "maxlen", val, nil
         end
 
-        if pattern and not val:match(pattern) then
-            return false, "pattern", val
+        if pattern and not string_match(val, pattern) then
+            -- is_valid, val_or_err, badval_or_nil, path_or_nil
+            return false, "pattern", val, nil
         end
 
         return callfunc(func, val)
     end
 end
-_M.string = vstring
+_M.string = _string
 
--- don't shadow lua's table
-local function vtable(opts)
+-- Validates that a value is a table, with optional constraints for arrays and maps.
+-- (Don't shadow Lua's "table")
+local function table_(opts)
     opts = opts or {}
     local array = false
     local map = false
@@ -124,16 +167,19 @@ local function vtable(opts)
 
     return function(val)
         if type(val) ~= "table" then
-            return false, "table", val
+            -- is_valid, val_or_err, badval_or_nil, path_or_nil
+            return false, "table", val, nil
         end
 
         if array and #val == 0 and not empty then
-            return false, "empty", val
+            -- is_valid, val_or_err, badval_or_nil, path_or_nil
+            return false, "empty", val, nil
         end
 
         -- checking for nil (not false)
         if map and next(val) == nil and not empty then
-            return false, "empty", val
+            -- is_valid, val_or_err, badval_or_nil, path_or_nil
+            return false, "empty", val, nil
         end
 
         if required ~= "all" then
@@ -143,6 +189,7 @@ local function vtable(opts)
 
                 -- checking for nil (not false)
                 if val[key] == nil then
+                    -- is_valid, val_or_err, badval_or_nil, path_or_nil
                     return false, "required", key, {key}
                 end
             end
@@ -152,6 +199,8 @@ local function vtable(opts)
         local val_or_err
         local badval_or_nil
         local path_or_nil
+
+        -- the value at key (or index) in the table.
         local v
 
         for key_or_idx, func_or_lit in pairs(tabledef) do
@@ -161,8 +210,10 @@ local function vtable(opts)
 
             v = val[key_or_idx]
 
+            -- checking for nil (not false)
             if v == nil and required == "all" then
                 -- every field is required
+                -- is_valid, val_or_err, badval_or_nil, path_or_nil
                 return false, "required", key_or_idx, {key_or_idx}
             end
 
@@ -172,6 +223,7 @@ local function vtable(opts)
                 is_valid, val_or_err, badval_or_nil, path_or_nil = func_or_lit(v)
 
                 if not is_valid then
+                    -- is_valid, val_or_err, badval_or_nil, path_or_nil
                     return false, val_or_err, badval_or_nil, {key_or_idx, path_or_nil}
                 end
             end
@@ -180,10 +232,11 @@ local function vtable(opts)
         return callfunc(func, val)
     end
 end
-_M.table = vtable
+_M.table = table_
 
+-- A shorthand for valid.table with opts.array set to true.
 local function array(opts)
-    return vtable {
+    return table_ {
         array = true,
         empty = opts.empty,
         required = opts.required,
@@ -193,12 +246,13 @@ local function array(opts)
 end
 _M.array = array
 
+-- Validates that a value is an array where each element string_matches a given definition.
 local function arrayof(deffunc, opts)
     opts = opts or {}
     local empty = false
     local unique = false
     local minlen = opts.minlen or 0
-    local maxlen = opts.maxlen or math.huge
+    local maxlen = opts.maxlen or math_huge
     local func = opts.func or defaultfunc
 
     if opts.empty then
@@ -219,21 +273,25 @@ local function arrayof(deffunc, opts)
 
     return function(val)
         if type(val) ~= "table" then
-            return false, "table", val
+            -- is_valid, val_or_err, badval_or_nil, path_or_nil
+            return false, "table", val, nil
         end
 
         local len = #val
 
         if len == 0 and not empty then
-            return false, "empty", val
+            -- is_valid, val_or_err, badval_or_nil, path_or_nil
+            return false, "empty", val, nil
         end
 
         if len < minlen then
-            return false, "minlen", val
+            -- is_valid, val_or_err, badval_or_nil, path_or_nil
+            return false, "minlen", val, nil
         end
 
         if len > maxlen then
-            return false, "maxlen", val
+            -- is_valid, val_or_err, badval_or_nil, path_or_nil
+            return false, "maxlen", val, nil
         end
 
         local is_valid
@@ -247,19 +305,23 @@ local function arrayof(deffunc, opts)
             is_valid, val_or_err, badval_or_nil, path_or_nil = deffunc(v)
 
             if not is_valid then
+                -- is_valid, val_or_err, badval_or_nil, path_or_nil
                 return false, val_or_err, badval_or_nil, {i, path_or_nil}
             end
 
             is_valid, val_or_err, badval_or_nil, path_or_nil = callfunc(func, v)
 
             if not is_valid then
+                -- is_valid, val_or_err, badval_or_nil, path_or_nil
                 return false, val_or_err, badval_or_nil, {i, path_or_nil}
             end
 
             if unique then
                 prev_i = set[v]
 
+                -- checking for nil (not false)
                 if prev_i ~= nil then
+                    -- is_valid, val_or_err, badval_or_nil, path_or_nil
                     return false, "unique", v, {prev_i, i}
                 else
                     set[v] = i
@@ -267,13 +329,15 @@ local function arrayof(deffunc, opts)
             end
         end
 
-        return true, val
+        -- is_valid, val_or_err, badval_or_nil, path_or_nil
+        return true, val, nil, nil
     end
 end
 _M.arrayof = arrayof
 
+-- A shorthand for valid.table with opts.map set to true.
 local function map(opts)
-    return vtable {
+    return table_ {
         map = true,
         empty = opts.empty,
         required = opts.required,
@@ -283,6 +347,7 @@ local function map(opts)
 end
 _M.map = map
 
+-- Validates maps with specific type definitions for both keys and values.
 local function mapof(deffuncs, opts)
     opts = opts or {}
     local empty = false
@@ -302,12 +367,14 @@ local function mapof(deffuncs, opts)
 
     return function(val)
         if type(val) ~= "table" then
-            return false, "table", val
+            -- is_valid, val_or_err, badval_or_nil, path_or_nil
+            return false, "table", val, nil
         end
 
         -- checking for nil (not false)
         if next(val) == nil and not empty then
-            return false, "empty", val
+            -- is_valid, val_or_err, badval_or_nil, path_or_nil
+            return false, "empty", val, nil
         end
 
         local is_valid
@@ -319,45 +386,54 @@ local function mapof(deffuncs, opts)
             is_valid, val_or_err, badval_or_nil, path_or_nil = keydeffunc(k)
 
             if not is_valid then
+                -- is_valid, val_or_err, badval_or_nil, path_or_nil
                 return false, val_or_err, badval_or_nil, {k, path_or_nil}
             end
 
             is_valid, val_or_err, badval_or_nil, path_or_nil = keyfunc(k)
 
             if not is_valid then
+                -- is_valid, val_or_err, badval_or_nil, path_or_nil
                 return false, val_or_err, badval_or_nil, {k, path_or_nil}
             end
 
             is_valid, val_or_err, badval_or_nil, path_or_nil = valdeffunc(v)
 
             if not is_valid then
+                -- is_valid, val_or_err, badval_or_nil, path_or_nil
                 return false, val_or_err, badval_or_nil, {k, v, path_or_nil}
             end
 
             is_valid, val_or_err, badval_or_nil, path_or_nil = valfunc(v)
 
             if not is_valid then
+                -- is_valid, val_or_err, badval_or_nil, path_or_nil
                 return false, val_or_err, badval_or_nil, {k, v, path_or_nil}
             end
         end
 
-        return true, val
+        -- is_valid, val_or_err, badval_or_nil, path_or_nil
+        return true, val, nil, nil
     end
 end
 _M.mapof = mapof
 
+-- Validates that a value is a function.
 local function func()
     return function(val)
         if type(val) ~= "function" then
-            return false, "func", val
+            -- is_valid, val_or_err, badval_or_nil, path_or_nil
+            return false, "func", val, nil
         end
 
-        return true, val
+        -- is_valid, val_or_err, badval_or_nil, path_or_nil
+        return true, val, nil, nil
     end
 end
 _M.func = func
 
-local function anyof(deffuncs)
+-- Validates that a value satisfies at least one of the given validation functions.
+local function anyof(funcs_or_lits)
     return function(val)
         local is_valid
         local val_or_err
@@ -365,22 +441,29 @@ local function anyof(deffuncs)
         local path_or_nil
         local errtabs = {}
 
-        for _, deffunc in ipairs(deffuncs) do
-            is_valid, val_or_err, badval_or_nil, path_or_nil = deffunc(val)
+        for _, func_or_lit in ipairs(funcs_or_lits) do
+            if type(func_or_lit) ~= "function" then
+                func_or_lit = literal(func_or_lit)
+            end
+
+            is_valid, val_or_err, badval_or_nil, path_or_nil = func_or_lit(val)
 
             if is_valid then
-                return true, val
+                -- is_valid, val_or_err, badval_or_nil, path_or_nil
+                return true, val, nil, nil
             else
                 errtabs[#errtabs + 1] = {val_or_err, badval_or_nil, path_or_nil}
             end
         end
 
+        -- is_valid, val_or_err, badval_or_nil, path_or_nil
         return false, "any", val, errtabs
     end
 end
 _M.anyof = anyof
 
-local function allof(deffuncs)
+-- Validates that a value satisfies all of the given validation functions.
+local function allof(funcs_or_lits)
     return function(val)
         local is_valid
         local val_or_err
@@ -388,8 +471,12 @@ local function allof(deffuncs)
         local path_or_nil
         local errtabs = {}
 
-        for _, deffunc in ipairs(deffuncs) do
-            is_valid, val_or_err, badval_or_nil, path_or_nil = deffunc(val)
+        for _, func_or_lit in ipairs(funcs_or_lits) do
+            if type(func_or_lit) ~= "function" then
+                func_or_lit = literal(func_or_lit)
+            end
+
+            is_valid, val_or_err, badval_or_nil, path_or_nil = func_or_lit(val)
 
             if not is_valid then
                 errtabs[#errtabs + 1] = {val_or_err, badval_or_nil, path_or_nil}
@@ -397,12 +484,20 @@ local function allof(deffuncs)
         end
 
         if #errtabs == 0 then
-            return true, val
+            -- is_valid, val_or_err, badval_or_nil, path_or_nil
+            return true, val, nil, nil
         else
+            -- is_valid, val_or_err, badval_or_nil, path_or_nil
             return false, "all", val, errtabs
         end
     end
 end
 _M.allof = allof
+
+-- Validates that a value is a literal boolean either true or false.
+local function boolean()
+    return anyof {true, false}
+end
+_M.boolean = boolean
 
 return _M

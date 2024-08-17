@@ -8,4 +8,3 @@ lint:
 
 test:
 	busted tests.lua
-
